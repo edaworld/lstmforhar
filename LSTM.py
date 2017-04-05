@@ -4,7 +4,6 @@ import numpy as np
 from sklearn.metrics import classification_report
 
 
-
 # Load "X" (the neural network's training and testing inputs)
 def load_X(X_signals_paths):
     X_signals = []
@@ -21,6 +20,7 @@ def load_X(X_signals_paths):
 
     return np.transpose(np.array(X_signals), (1, 2, 0))
 
+
 # Load "y" (the neural network's training and testing outputs)
 def load_y(y_path):
     file = open(y_path)
@@ -34,6 +34,7 @@ def load_y(y_path):
     file.close()
     # Substract 1 to each output class for friendly 0-based indexing
     return y_ - 1
+
 
 class Config(object):
     def __init__(self, X_train, X_test):
@@ -65,18 +66,20 @@ class Config(object):
         #     'output': tf.Variable(tf.random_normal([self.n_classes]))#输出
         # }
         self.W = {
-            'hidden': tf.get_variable('w1_xaiver',[self.n_inputs, self.n_hidden],initializer=tf.contrib.layers.xavier_initializer()),   #输入
-            'output': tf.get_variable('w2_xaiver',[self.n_hidden, self.n_classes],initializer=tf.contrib.layers.xavier_initializer())   #输出
+            'hidden': tf.get_variable('w1_xaiver', [self.n_inputs, self.n_hidden],
+                                      initializer=tf.contrib.layers.xavier_initializer()),
+            # 输入
+            'output': tf.get_variable('w2_xaiver', [self.n_hidden, self.n_classes],
+                                      initializer=tf.contrib.layers.xavier_initializer())
+            # 输出
         }
         self.biases = {
-            'hidden': tf.Variable(tf.random_normal([self.n_hidden])),#输入
-            'output': tf.Variable(tf.random_normal([self.n_classes]))#输出
+            'hidden': tf.Variable(tf.random_normal([self.n_hidden])),  # 输入
+            'output': tf.Variable(tf.random_normal([self.n_classes]))  # 输出
         }
 
 
-
-
-#LSTM核心算法
+# LSTM核心算法
 def LSTM_Network(feature_mat, config):
     """model a LSTM Network,
       it stacks 2 LSTM layers, each layer has n_hidden=32 cells
@@ -115,7 +118,7 @@ def LSTM_Network(feature_mat, config):
     """
     Version 1
     """
-    #下面是根据莫烦的老版本RNN修改的代码
+    # 下面是根据莫烦的老版本RNN修改的代码
     # Prepare data shape to match `rnn` function requirements
     # Current data input shape: (batch_size, n_steps, n_input)
     # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)
@@ -124,7 +127,7 @@ def LSTM_Network(feature_mat, config):
     # Reshaping to (n_steps*batch_size, n_input)
     feature_mat = tf.reshape(feature_mat, [-1, config.n_inputs])
     # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
-    feature_mat = tf.split(0, config.n_steps, feature_mat)#此处tf.split代码有变化，请注意
+    feature_mat = tf.split(0, config.n_steps, feature_mat)  # 此处tf.split代码有变化，请注意
     # Define a lstm cell with tensorflow
     # lstm_cell =  tf.nn.rnn_cell.BasicLSTMCell(config.n_hidden, forget_bias=1.0)
     lstm_cell = tf.nn.rnn_cell.LSTMCell(config.n_hidden)
@@ -134,8 +137,6 @@ def LSTM_Network(feature_mat, config):
     outputs, states = tf.nn.rnn(lstm_cell, feature_mat, dtype=tf.float32)
     # Linear activation, using rnn inner loop last output
     return tf.matmul(outputs[-1], config.W['output']) + config.biases['output']
-
-
 
     """
     Version 0
@@ -177,7 +178,7 @@ def LSTM_Network(feature_mat, config):
     # return tf.matmul(outputs[-1], config.W['output']) + config.biases['output']
 
 
-#将输入序列one_hot化
+# 将输入序列one_hot化
 def one_hot(label):
     label_num = len(label)
     new_label = label.reshape(label_num)  # shape : [sample_num]
@@ -185,23 +186,24 @@ def one_hot(label):
     n_values = np.max(new_label) + 1
     return np.eye(n_values)[np.array(new_label, dtype=np.int32)]
 
+
 if __name__ == "__main__":
 
-    #-----------------------------
+    # -----------------------------
     # step1: 加载数据
-    #-----------------------------
+    # -----------------------------
     # Those are separate normalised input features for the neural network
-    INPUT_SIGNAL_TYPES = [#加载的数据都是原始数据，raw data
-                          "body_acc_x_",
-                          "body_acc_y_",
-                          "body_acc_z_",
-                          "body_gyro_x_",
-                          "body_gyro_y_",
-                          "body_gyro_z_",
-                          "total_acc_x_",
-                          "total_acc_y_",
-                          "total_acc_z_"
-                          ]
+    INPUT_SIGNAL_TYPES = [  # 加载的数据都是原始数据，raw data
+                            "body_acc_x_",
+                            "body_acc_y_",
+                            "body_acc_z_",
+                            "body_gyro_x_",
+                            "body_gyro_y_",
+                            "body_gyro_z_",
+                            "total_acc_x_",
+                            "total_acc_y_",
+                            "total_acc_z_"
+                            ]
 
     # Output classes to learn how to classify
     LABELS = [
@@ -225,37 +227,37 @@ if __name__ == "__main__":
     X_test_signals_paths = [
         DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES
         ]
-    X_train = load_X(X_train_signals_paths)#load raw train data
-    print("load X_train shape is:",X_train.shape)#(7352, 128, 9)
-    X_test = load_X(X_test_signals_paths)#load raw test data
-    print("load X_test shape is:",X_test.shape)#(2947, 128, 9)
+    X_train = load_X(X_train_signals_paths)  # load raw train data
+    print("load X_train shape is:", X_train.shape)  # (7352, 128, 9)
+    X_test = load_X(X_test_signals_paths)  # load raw test data
+    print("load X_test shape is:", X_test.shape)  # (2947, 128, 9)
 
-    y_train_path = DATASET_PATH + TRAIN + "y_train.txt"#路径为data/UCI HAR Dataset/train/y_train.txt
-    y_test_path = DATASET_PATH + TEST + "y_test.txt"#路径为data/UCI HAR Dataset/train/y_test.txt
-    y_train = one_hot(load_y(y_train_path)) #to the one-hot matrix
-    print("y_train one-hot shape is:", y_train.shape)#(7352, 6)
+    y_train_path = DATASET_PATH + TRAIN + "y_train.txt"  # 路径为data/UCI HAR Dataset/train/y_train.txt
+    y_test_path = DATASET_PATH + TEST + "y_test.txt"  # 路径为data/UCI HAR Dataset/train/y_test.txt
+    y_train = one_hot(load_y(y_train_path))  # to the one-hot matrix
+    print("y_train one-hot shape is:", y_train.shape)  # (7352, 6)
     y_test = one_hot(load_y(y_test_path))
-    print("y_test one-hot shape is:", y_test.shape)#(2947, 6)
+    print("y_test one-hot shape is:", y_test.shape)  # (2947, 6)
 
-    #-----------------------------------
+    # -----------------------------------
     # step2: 定义模型参数
-    #-----------------------------------
-    config =Config(X_train, X_test)#此处配置了几个config
+    # -----------------------------------
+    config = Config(X_train, X_test)  # 此处配置了几个config
 
     print("Some useful info to get an insight on dataset's shape and normalisation:")
     print("features shape, labels shape, each features mean, each features standard deviation")
-    print(X_test.shape, y_test.shape,np.mean(X_test), np.std(X_test))
+    print(X_test.shape, y_test.shape, np.mean(X_test), np.std(X_test))
     print("the dataset is therefore properly normalised, as expected.")
 
-    print(X_train[0].shape)#(128,9)
-    print(X_train[0][0].shape)#(9,)
+    print(X_train[0].shape)  # (128,9)
+    print(X_train[0][0].shape)  # (9,)
     print("\n========================================================================\n")
 
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # step3: 建立神经网络
-    #------------------------------------------------------
-    X = tf.placeholder(tf.float32, [None, config.n_steps, config.n_inputs])#(None,128,9)
-    Y = tf.placeholder(tf.float32, [None, config.n_classes])#(None,6)
+    # ------------------------------------------------------
+    X = tf.placeholder(tf.float32, [None, config.n_steps, config.n_inputs])  # (None,128,9)
+    Y = tf.placeholder(tf.float32, [None, config.n_classes])  # (None,6)
 
     pred_Y = LSTM_Network(X, config)
 
@@ -264,10 +266,8 @@ if __name__ == "__main__":
     # Soca.neusoftmax loss and L2加入L2惩罚项
     Loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred_Y, Y)) + L2
 
-
-
     trainvars = tf.trainable_variables()
-    grads, _ = tf.clip_by_global_norm(tf.gradients(Loss, trainvars),10)   # We clip the gradients to prevent explosion
+    grads, _ = tf.clip_by_global_norm(tf.gradients(Loss, trainvars), 10)  # We clip the gradients to prevent explosion
     optimizer = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(Loss)  # 原始代码
 
     # global_step = tf.Variable(0)
@@ -279,25 +279,26 @@ if __name__ == "__main__":
     correct_pred = tf.equal(tf.argmax(pred_Y, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, dtype=tf.float32))
 
-    #--------------------------------------------
+    # --------------------------------------------
     # step4: Hooray, now train the neural network
-    #--------------------------------------------
+    # --------------------------------------------
     # Note that log_device_placement can be turned of for less console spam.
     train_losses = []
     train_accuracies = []
     test_losses = []
     test_accuracies = []
 
-
-    sess = tf.InteractiveSession(config = tf.ConfigProto(log_device_placement = False))  # Ture改为false可以取消在终端显示输出
+    sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=False))  # Ture改为false可以取消在终端显示输出
     tf.global_variables_initializer().run()
 
     best_accuracy = 0.0
     # Start training for each batch and loop epochs
 
     for i in range(config.training_epochs):
-        for start, end in zip(range(0, config.train_count, config.batch_size), range(config.batch_size, config.train_count + 1, config.batch_size)):
-            _, pred_temp, lost_temp=sess.run([optimizer, accuracy, Loss], feed_dict={X: X_train[start:end],Y: y_train[start:end]})
+        for start, end in zip(range(0, config.train_count, config.batch_size),
+                              range(config.batch_size, config.train_count + 1, config.batch_size)):
+            _, pred_temp, lost_temp = sess.run([optimizer, accuracy, Loss],
+                                               feed_dict={X: X_train[start:end], Y: y_train[start:end]})
 
             train_accuracies.append(pred_temp)
             train_losses.append(lost_temp)
@@ -308,7 +309,8 @@ if __name__ == "__main__":
             test_accuracies.append(accuracy_out)
             test_losses.append(loss_out)
 
-        print("traing iter: {},".format(i)+" test accuracy : {},".format(accuracy_out)+" loss : {}".format(loss_out))
+        print(
+            "traing iter: {},".format(i) + " test accuracy : {},".format(accuracy_out) + " loss : {}".format(loss_out))
         best_accuracy = max(best_accuracy, accuracy_out)
 
     print("")
@@ -319,5 +321,3 @@ if __name__ == "__main__":
     predictions = pred_out.argmax(1)
     y_test = load_y(y_test_path)
     print(classification_report(y_test, predictions))
-
-
