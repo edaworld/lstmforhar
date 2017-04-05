@@ -1,13 +1,8 @@
+# coding=gbk
 import tensorflow as tf
 import numpy as np
 from sklearn.metrics import classification_report
-import matplotlib.pyplot as plt
-import matplotlib
-from sklearn import metrics
-import os
-from tensorflow.contrib import rnn
-import operator
-from os import listdir
+
 
 # Load "X" (the neural network's training and testing inputs)
 def load_X(X_signals_paths):
@@ -233,14 +228,14 @@ if __name__ == "__main__":
     y_train_path = DATASET_PATH + TRAIN + "y_train.txt"#路径为data/UCI HAR Dataset/train/y_train.txt
     y_test_path = DATASET_PATH + TEST + "y_test.txt"#路径为data/UCI HAR Dataset/train/y_test.txt
     y_train = one_hot(load_y(y_train_path)) #to the one-hot matrix
-    print("y_train one-hot shape is:",y_train.shape)#(7352, 6)
+    print("y_train one-hot shape is:", y_train.shape)#(7352, 6)
     y_test = one_hot(load_y(y_test_path))
-    print("y_test one-hot shape is:",y_test.shape)#(2947, 6)
+    print("y_test one-hot shape is:", y_test.shape)#(2947, 6)
 
     #-----------------------------------
-    # step2: define parameters for model
+    # step2: 定义模型参数
     #-----------------------------------
-    config = Config(X_train, X_test)#此处配置了几个config
+    config =Config(X_train, X_test)#此处配置了几个config
 
     print("Some useful info to get an insight on dataset's shape and normalisation:")
     print("features shape, labels shape, each features mean, each features standard deviation")
@@ -252,7 +247,7 @@ if __name__ == "__main__":
     print("\n========================================================================\n")
 
     #------------------------------------------------------
-    # step3: Let's get serious and build the neural network
+    # step3: 建立神经网络
     #------------------------------------------------------
     X = tf.placeholder(tf.float32, [None, config.n_steps, config.n_inputs])#(None,128,9)
     Y = tf.placeholder(tf.float32, [None, config.n_classes])#(None,6)
@@ -261,14 +256,15 @@ if __name__ == "__main__":
 
     # Loss,optimizer,evaluation,计算L2参数值
     L2 = config.lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables())
-    # Softmax loss and L2加入L2惩罚项
+    # Soca.neusoftmax loss and L2加入L2惩罚项
     Loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred_Y, Y)) + L2
 
 
-    tvars = tf.trainable_variables()
-    grads, _ = tf.clip_by_global_norm(tf.gradients(Loss, tvars),10)   #We clip the gradients to prevent explosion
+    trainvars = tf.trainable_variables()
+    grads, _ = tf.clip_by_global_norm(tf.gradients(Loss, trainvars),10)   #We clip the gradients to prevent explosion
     optimizer = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(Loss)  #原始代码
-
+    # global_step = tf.Variable(0, name='global_step', trainable=False)
+    # train_op = optimizer.apply_gradients(zip(gradients, v), global_step=global_step)
 
     # optimizer = tf.train.AdamOptimizer(learning_rate=config.learning_rate, epsilon=1e-08)
     # gradients, v = zip(*optimizer.compute_gradients(Loss))
@@ -300,7 +296,7 @@ if __name__ == "__main__":
 
     for i in range(config.training_epochs):
         for start, end in zip(range(0, config.train_count, config.batch_size), range(config.batch_size, config.train_count + 1, config.batch_size)):
-            _, pred_temp, lost_temp=sess.run([optimizer,accuracy,Loss], feed_dict={X: X_train[start:end],Y: y_train[start:end]})
+            _, pred_temp, lost_temp=sess.run([optimizer, accuracy, Loss], feed_dict={X: X_train[start:end],Y: y_train[start:end]})
 
             train_accuracies.append(pred_temp)
             train_losses.append(lost_temp)
