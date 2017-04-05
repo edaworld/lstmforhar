@@ -5,20 +5,20 @@ from sklearn.metrics import classification_report
 
 
 # Load "X" (the neural network's training and testing inputs)
-def load_X(X_signals_paths):
-    X_signals = []
+def load_X(x_signals_paths):
+    x_signals = []
 
-    for signal_type_path in X_signals_paths:
+    for signal_type_path in x_signals_paths:
         file = open(signal_type_path)
         # Read dataset from disk, dealing with text files' syntax
-        X_signals.append(
+        x_signals.append(
             [np.array(serie, dtype=np.float32) for serie in [
                 row.replace('  ', ' ').strip().split(' ') for row in file
                 ]]
         )
         file.close()
 
-    return np.transpose(np.array(X_signals), (1, 2, 0))
+    return np.transpose(np.array(x_signals), (1, 2, 0))
 
 
 # Load "y" (the neural network's training and testing outputs)
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     accuracy = tf.reduce_mean(tf.cast(correct_pred, dtype=tf.float32))
 
     # --------------------------------------------
-    # step4: Hooray, now train the neural network
+    # step4: ¿ªÊ¼ÑµÁ·ÍøÂç
     # --------------------------------------------
     # Note that log_device_placement can be turned of for less console spam.
     train_losses = []
