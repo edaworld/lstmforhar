@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.metrics import classification_report
 
 
+
 # Load "X" (the neural network's training and testing inputs)
 def load_X(X_signals_paths):
     X_signals = []
@@ -14,7 +15,7 @@ def load_X(X_signals_paths):
         X_signals.append(
             [np.array(serie, dtype=np.float32) for serie in [
                 row.replace('  ', ' ').strip().split(' ') for row in file
-            ]]
+                ]]
         )
         file.close()
 
@@ -27,7 +28,7 @@ def load_y(y_path):
     y_ = np.array(
         [elem for elem in [
             row.replace('  ', ' ').strip().split(' ') for row in file
-        ]],
+            ]],
         dtype=np.int32
     )
     file.close()
@@ -46,6 +47,10 @@ class Config(object):
         self.lambda_loss_amount = 0.0015
         self.training_epochs = 300
         self.batch_size = 1500
+        self.clip_gradients = 10
+        self.gradient_noise_scale = None
+
+
 
         # LSTM structure
         self.n_inputs = len(X_train[0][0])  # Features count is of 9: three 3D sensors features over time
@@ -187,16 +192,16 @@ if __name__ == "__main__":
     #-----------------------------
     # Those are separate normalised input features for the neural network
     INPUT_SIGNAL_TYPES = [#加载的数据都是原始数据，raw data
-        "body_acc_x_",
-        "body_acc_y_",
-        "body_acc_z_",
-        "body_gyro_x_",
-        "body_gyro_y_",
-        "body_gyro_z_",
-        "total_acc_x_",
-        "total_acc_y_",
-        "total_acc_z_"
-    ]
+                          "body_acc_x_",
+                          "body_acc_y_",
+                          "body_acc_z_",
+                          "body_gyro_x_",
+                          "body_gyro_y_",
+                          "body_gyro_z_",
+                          "total_acc_x_",
+                          "total_acc_y_",
+                          "total_acc_z_"
+                          ]
 
     # Output classes to learn how to classify
     LABELS = [
@@ -216,10 +221,10 @@ if __name__ == "__main__":
 
     X_train_signals_paths = [
         DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES
-    ]
+        ]
     X_test_signals_paths = [
         DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES
-    ]
+        ]
     X_train = load_X(X_train_signals_paths)#load raw train data
     print("load X_train shape is:",X_train.shape)#(7352, 128, 9)
     X_test = load_X(X_test_signals_paths)#load raw test data
@@ -260,18 +265,17 @@ if __name__ == "__main__":
     Loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred_Y, Y)) + L2
 
 
-    trainvars = tf.trainable_variables()
-    grads, _ = tf.clip_by_global_norm(tf.gradients(Loss, trainvars),10)   #We clip the gradients to prevent explosion
-    optimizer = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(Loss)  #原始代码
-    # global_step = tf.Variable(0, name='global_step', trainable=False)
-    # train_op = optimizer.apply_gradients(zip(gradients, v), global_step=global_step)
 
-    # optimizer = tf.train.AdamOptimizer(learning_rate=config.learning_rate, epsilon=1e-08)
-    # gradients, v = zip(*optimizer.compute_gradients(Loss))
-    # gradients, _ = tf.clip_by_global_norm(gradients, 10)
-    #
-    # global_step = tf.Variable(0, name='global_step', trainable=False)
-    # train_op = optimizer.apply_gradients(zip(gradients, v), global_step=global_step)
+    trainvars = tf.trainable_variables()
+    grads, _ = tf.clip_by_global_norm(tf.gradients(Loss, trainvars),10)   # We clip the gradients to prevent explosion
+    optimizer = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(Loss)  # 原始代码
+
+    # global_step = tf.Variable(0)
+    # learning_rate =tf.train.exponential_decay(config.learning_rate,global_step,300,0.96,staircase= True)
+    # optimizer =tf.train.GradientDescentOptimizer(learning_rate).minimize(Loss,global_step=global_step)
+
+
+
 
 
 
@@ -301,7 +305,7 @@ if __name__ == "__main__":
             train_accuracies.append(pred_temp)
             train_losses.append(lost_temp)
 
-        # Test completely at every epoch: calculate accuracy
+            # Test completely at every epoch: calculate accuracy
             pred_out, accuracy_out, loss_out = sess.run([pred_Y, accuracy, Loss], feed_dict={X: X_test, Y: y_test})
 
             test_accuracies.append(accuracy_out)
